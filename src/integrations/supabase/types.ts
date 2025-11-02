@@ -14,13 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          created_at: string
+          description: string
+          event_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          event_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          event_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          operation_type: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          operation_type: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          operation_type?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      license_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_name: string
+          public_key: string
+          scripts_vinculados: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_name: string
+          public_key?: string
+          scripts_vinculados?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_name?: string
+          public_key?: string
+          scripts_vinculados?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number
+          company_name: string
+          created_at: string
+          credits_balance: number
+          id: string
+          name: string
+          nome_alteracao_usada: boolean
+          plan_status: string
+          theme_preference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age: number
+          company_name: string
+          created_at?: string
+          credits_balance?: number
+          id?: string
+          name: string
+          nome_alteracao_usada?: boolean
+          plan_status?: string
+          theme_preference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number
+          company_name?: string
+          created_at?: string
+          credits_balance?: number
+          id?: string
+          name?: string
+          nome_alteracao_usada?: boolean
+          plan_status?: string
+          theme_preference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scripts_protected: {
+        Row: {
+          created_at: string
+          credits_used: number | null
+          encrypted_size: number | null
+          id: string
+          original_size: number | null
+          protection_level: string | null
+          script_name: string
+          status: string
+          status_encryption: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_used?: number | null
+          encrypted_size?: number | null
+          id?: string
+          original_size?: number | null
+          protection_level?: string | null
+          script_name: string
+          status?: string
+          status_encryption?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_used?: number | null
+          encrypted_size?: number | null
+          id?: string
+          original_size?: number | null
+          protection_level?: string | null
+          script_name?: string
+          status?: string
+          status_encryption?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      deduct_credits: {
+        Args: {
+          p_amount: number
+          p_description: string
+          p_operation_type: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      get_user_credits: { Args: { p_user_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never

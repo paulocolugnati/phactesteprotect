@@ -132,6 +132,50 @@ export default function Encryption() {
     setProgress(0);
 
     try {
+      // Get user and profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      // @ts-ignore
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        throw new Error("Perfil não encontrado");
+      }
+
+      // Check if user is Trial and trying to use premium features
+      const isPremiumProtection = protectionLevel === "advanced" || protectionLevel === "premium";
+      if (profile.plan_status === "trial" && isPremiumProtection) {
+        setProcessing(false);
+        toast({
+          title: "Recurso Premium",
+          description: "Criptografia Avançada e Indetectável estão disponíveis apenas no Plano PRO. Faça upgrade para acessar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Calculate total credits needed
+      const creditsPerFile = protectionLevels[protectionLevel].credits;
+      const totalCreditsNeeded = files.length * creditsPerFile;
+
+      // Check if user has enough credits
+      if (profile.credits_balance < totalCreditsNeeded) {
+        setProcessing(false);
+        toast({
+          title: "Créditos Insuficientes",
+          description: `Você precisa de ${totalCreditsNeeded} créditos, mas tem apenas ${profile.credits_balance}. Faça upgrade para continuar.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Simulate processing with progress
       const interval = setInterval(() => {
         setProgress((prev) => {
@@ -142,13 +186,6 @@ export default function Encryption() {
           return prev + 10;
         });
       }, 300);
-
-      // Get user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        clearInterval(interval);
-        throw new Error("Usuário não autenticado");
-      }
 
       // Call edge function to process files
       const filesToProcess = await Promise.all(
@@ -177,12 +214,25 @@ export default function Encryption() {
       clearInterval(interval);
       setProgress(100);
 
+      // Deduct credits using the database function
+      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits', {
+        p_user_id: user.id,
+        p_amount: totalCreditsNeeded,
+        p_operation_type: 'encryption',
+        p_description: `Criptografia de ${files.length} arquivo(s) com nível ${protectionLevel}`
+      });
+
+      if (deductError || !deductResult) {
+        console.error('Error deducting credits:', deductError);
+        throw new Error('Falha ao deduzir créditos');
+      }
+
       // Log activity
       // @ts-ignore
       await supabase.from("activity_logs").insert({
         user_id: user.id,
         event_type: "encryption",
-        description: `${files.length} arquivo(s) criptografado(s) com nível ${protectionLevel}`,
+        description: `${files.length} arquivo(s) criptografado(s) com nível ${protectionLevel} (${totalCreditsNeeded} créditos)`,
       });
 
       // Insert scripts_protected and update license key
@@ -199,6 +249,8 @@ export default function Encryption() {
             encrypted_size: Math.floor(file.size * 1.2),
             status: "protected",
             status_encryption: "success",
+            credits_used: creditsPerFile,
+            protection_level: protectionLevel,
           })
           .select()
           .single();
@@ -227,13 +279,17 @@ export default function Encryption() {
           .eq("id", selectedKey);
       }
 
-      // Armazenar dados processados e código do loader
-      setProcessedData(processData);
+      // Store processed data and loader code
+      setProcessedData({
+        ...processData,
+        creditsUsed: totalCreditsNeeded,
+        creditsRemaining: profile.credits_balance - totalCreditsNeeded,
+      });
       setLoaderCode(processData.loaderCode || '');
 
       toast({
-        title: "Processamento Concluído!",
-        description: "Seus arquivos foram criptografados com sucesso.",
+        title: "✅ Criptografia Concluída!",
+        description: `${files.length} arquivo(s) processado(s). ${totalCreditsNeeded} créditos utilizados.`,
       });
 
       setStep(3);
@@ -258,6 +314,14 @@ export default function Encryption() {
               status_encryption: "failed",
             });
         }
+
+        // Log failed encryption
+        // @ts-ignore
+        await supabase.from("activity_logs").insert({
+          user_id: user.id,
+          event_type: "encryption_failed",
+          description: `Falha ao criptografar ${files.length} arquivo(s): ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        });
       }
       
       toast({
@@ -272,19 +336,19 @@ export default function Encryption() {
     standard: {
       name: "Padrão (Rápido)",
       description: "Ofuscação básica de variáveis e strings",
-      credits: 1,
+      credits: 4,
       badge: undefined,
     },
     advanced: {
       name: "Avançado",
       description: "Ofuscação de bytecode, código morto e fluxo de controle",
-      credits: 3,
-      badge: undefined,
+      credits: 6,
+      badge: "Premium",
     },
     premium: {
       name: "Indetectável (IA-Driven)",
       description: "Análise por IA e ofuscação otimizada",
-      credits: 5,
+      credits: 8,
       badge: "Premium",
     },
   };

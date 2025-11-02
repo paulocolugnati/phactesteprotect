@@ -7,7 +7,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, FileCode, AlertCircle, Coins, Lock, ArrowRight } from "lucide-react";
+import { Shield, FileCode, AlertCircle, Coins, Lock, ArrowRight, Key } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -73,99 +73,83 @@ export default function Dashboard() {
           <DashboardHeader />
           
           <main className="flex-1 p-6 space-y-6">
-            {/* Welcome Message */}
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">
-                Bem-vindo de volta, <span className="text-primary">{profile?.name || 'User'}</span>
-              </h1>
-              <p className="text-muted-foreground">
-                Centro de Controle da Segurança de Propriedade Intelectual
-              </p>
-            </div>
-
-            {/* Main Status Card - Prioridade Máxima */}
-            <Card className={`glass-card border-2 ${isNewUser ? "border-primary/50" : "border-green-500/50"} animate-fade-in`}>
-              <CardHeader>
-                <div className="flex flex-col gap-4">
-                  <CardTitle className="text-2xl">
-                    STATUS DE PROTEÇÃO DA PROPRIEDADE INTELECTUAL
-                  </CardTitle>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        {isNewUser ? (
-                          <>
-                            <AlertCircle className="h-8 w-8 text-primary" />
-                            <div>
-                              <p className="text-sm text-muted-foreground">Nível de Risco do IP</p>
-                              <p className="text-3xl font-bold text-primary">ALTO 🔴</p>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="h-8 w-8 text-green-500" />
-                            <div>
-                              <p className="text-sm text-muted-foreground">Nível de Proteção do IP</p>
-                              <p className="text-3xl font-bold text-green-500">
-                                {Math.round((scriptsCount / (scriptsCount + 1)) * 100)}% Protegido 🟢
-                              </p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      
-                      <CardDescription className="text-base">
-                        {isNewUser
-                          ? "Seu código está vulnerável a vazamentos e engenharia reversa. Ação imediata necessária."
-                          : `${scriptsCount} script${scriptsCount > 1 ? 's' : ''} sob proteção ativa com criptografia de nível empresarial.`}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-4 glass rounded-lg border border-primary/20">
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-primary" />
-                    Ação Recomendada
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {isNewUser
-                      ? "Criptografe seus scripts imediatamente para evitar roubo de propriedade intelectual e vazamentos de lógica de negócio."
-                      : "Continue monitorando suas chaves de licença ativas. Revogue chaves comprometidas imediatamente."}
+            {/* Welcome Message - Glass Card */}
+            <Card className="glass-card border-primary/20">
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold">
+                    Olá, <span className="text-primary">{profile?.name || 'User'}</span>! <span className="text-green-400">Sua Propriedade Intelectual está protegida.</span>
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Servidor/Loja: <span className="font-semibold text-foreground">{profile?.company_name || 'Empresa'}</span>
                   </p>
                 </div>
-                
-                <Button variant="hero" size="lg" className="w-full sm:w-auto">
+              </CardContent>
+            </Card>
+
+            {/* CTA Card - Sua Proteção de IP Exige Atenção? */}
+            <Card className={`glass-card border-2 ${isNewUser ? "border-primary/50" : "border-green-500/50"} animate-fade-in`}>
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  {isNewUser ? (
+                    <AlertCircle className="h-6 w-6 text-primary" />
+                  ) : (
+                    <Shield className="h-6 w-6 text-green-500" />
+                  )}
+                  Sua Proteção de IP Exige Atenção?
+                </CardTitle>
+                <CardDescription className="text-base mt-2">
+                  {isNewUser
+                    ? `Você tem ${isNewUser ? 'scripts' : '0 scripts'} não protegidos. Proteger o IP evita a pirataria e vazamentos.`
+                    : `Seus ${scriptsCount} scripts estão protegidos. Continue monitorando suas chaves de licença.`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="default" 
+                  size="lg" 
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  onClick={() => window.location.href = '/dashboard/encryption'}
+                >
                   <Lock className="mr-2 h-5 w-5" />
-                  {isNewUser ? "Proteger Minha Propriedade Intelectual Agora" : "Criptografar Novo Script"}
+                  Ir para Criptografia de Scripts
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </CardContent>
             </Card>
 
             {/* Metrics Grid - Cards de Métricas */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
               <MetricCard
-                title="Chaves de Licença Ativas"
-                value={scriptsCount || 0}
-                icon={Coins}
-                description="Gestão de vendas e distribuição"
-              />
-              
-              <MetricCard
-                title="Créditos de Ofuscação"
-                value="Ilimitado"
-                icon={FileCode}
-                description={`Plano ${profile?.plan_status || 'trial'}`}
-              />
-              
-              <MetricCard
-                title="Vulnerabilidades Descobertas"
-                value={0}
+                title="Status de Proteção"
+                value={isNewUser ? "0%" : `${Math.round((scriptsCount / (scriptsCount + 1)) * 100)}%`}
                 icon={Shield}
-                description="Últimos 7 dias"
+                description="Média de proteção dos seus recursos"
+                valueColor={isNewUser ? "text-red-500" : "text-green-500"}
+              />
+              
+              <MetricCard
+                title="Chaves de Licença"
+                value={scriptsCount || 0}
+                icon={Key}
+                description={`Máximo de ${profile?.plan_status === 'trial' ? '1' : '∞'} chave(s) para plano ${profile?.plan_status?.toUpperCase() || 'TRIAL'}`}
+                valueColor="text-primary"
+              />
+              
+              <MetricCard
+                title="Vulnerabilidade"
+                value="0"
+                icon={AlertCircle}
+                description="Alertas críticos detectados"
+                valueColor="text-green-500"
+              />
+
+              <MetricCard
+                title="Uso de Créditos"
+                value={`${10 - (profile?.credits_balance || 0)}`}
+                icon={Coins}
+                description={`Créditos gastos (Restam: ${profile?.credits_balance || 0})`}
+                valueColor="text-yellow-500"
               />
             </div>
 
